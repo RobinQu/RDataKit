@@ -1,4 +1,4 @@
-RDataKIt
+RDataKit
 ========
 
 Lightweight ORM Frameworks built upon CoreData

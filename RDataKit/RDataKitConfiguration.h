@@ -1,5 +1,5 @@
 //
-//  RDataKit.h
+//  RDataKitConfiguration.h
 //  RDataKit
 //
 //  Created by Robin Qu on 13-6-15.
@@ -8,11 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
+@interface RDataKitConfiguration : NSObject
 
-
-
-@interface RDataKit : NSObject
-
-
++ (NSDictionary *)get;
     
 @end
