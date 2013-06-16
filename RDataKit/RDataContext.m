@@ -76,7 +76,7 @@ static NSString *const kDefaultIdentifierName = @"id";
     if (self.delegate && [self.delegate respondsToSelector:@selector(dataContext:parseObjectFromResponse:modal:)]) {
         return [self.delegate dataContext:self parseObjectFromResponse:response modal:modalClass];
     }
-    NSString *resourceName = [[self class] description];
+    NSString *resourceName = [modalClass description];
     if ([response valueForKey:resourceName]) {
         return [response valueForKey:resourceName];
     }
@@ -131,7 +131,10 @@ static NSString *const kDefaultIdentifierName = @"id";
     [self.dataService getPath:path parameters:options success:^(AFHTTPRequestOperation *operation, id responseObject) {
         if ([self isGoodResponseForOperation:operation modal:modalClass]) {
             id obj = [self parseObjectFromResponse:responseObject forModal:modalClass];
-            [self createOrUpdateModal:modalClass withObject:obj autoCommit:YES];
+            RModel *one = [self createOrUpdateModal:modalClass withObject:obj autoCommit:YES];
+            if (callback) {
+                callback(nil, one);
+            }
         } else {
             if (callback) {
                 callback(SERVICE_RESPONSE_ERROR, nil);
