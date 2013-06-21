@@ -12,14 +12,18 @@
 
 @interface RModel : NSManagedObject
     
-    @property (nonatomic, assign, readonly) NSString *identifer;
+@property (nonatomic, assign, readonly) NSString *identifer;
+
 + (void)regisiterDataContext:(RDataContext *)dataContext;
 + (void)loadAllWithOptions:(NSDictionary *)options callback:(ResourcesResponseCallbackBlock)callback;
 + (void)loadByIdentifier:(NSString *)identifier withOptions:(NSDictionary *)options callback:(ResourceResponseCallbackBlock)callback;
++ (void)requestRecord:(Class)modalClass atPath:(NSString *)path method:(NSString *)method withObject:(NSDictionary *)obj callback:(ResourceResponseCallbackBlock)callback forRaw:(BOOL)raw;
 + (void)createWithObject:(NSDictionary *)obj callback:(ResourceResponseCallbackBlock)callback;
++ (NSString *)buildPathOptions:(NSDictionary *)options;
+
 - (void)updateWithObject:(NSDictionary *)obj callback:(ResourceResponseCallbackBlock)callback;
 - (void)destroyWithOptions:(NSDictionary *)options callback:(ErrorCallbackBlock)callback;
-    
+
 - (void)setupWithObject:(NSDictionary *)obj;    
     
     

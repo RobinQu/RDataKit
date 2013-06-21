@@ -14,6 +14,13 @@
 #import <objc/runtime.h>
 
 static NSString *const kDefaultIdentifierName = @"id";
+static void (^ResourceSuccessCallback)(AFHTTPRequestOperation *operation, id responseObject, ResourceResponseCallbackBlock callback) = ^(AFHTTPRequestOperation *operation, id responseObject, ResourceResponseCallbackBlock callback) {
+    
+};
+static void (^ResourceFailureCallback)(AFHTTPRequestOperation *operation, NSError *error) = ^(AFHTTPRequestOperation *operation, NSError *error) {
+    
+};
+
 
 @implementation RDataContext
 
@@ -22,6 +29,8 @@ static NSString *const kDefaultIdentifierName = @"id";
     NSAssert([self isSubclassOfClass:[RDataContext class]], @"should invoke on subclasses");
     return nil;
 }
+
+#pragma mark - Data Helpers
     
 - (NSString *)pathNameForModal:(Class)modlaClass
 {
@@ -91,6 +100,8 @@ static NSString *const kDefaultIdentifierName = @"id";
     return response;
 }
 
+#pragma mark - Remote Access Methods
+
 - (void)loadAllRecords:(Class)modalClass withOptions:(NSDictionary *)options callback:(ResourcesResponseCallbackBlock)callback
 {
     NSString *path = [self pathNameForModal:modalClass];
@@ -128,12 +139,56 @@ static NSString *const kDefaultIdentifierName = @"id";
 - (void)loadRecord:(Class)modalClass byIdentifier:(NSString *)identifier withOptions:(NSDictionary *)options callback:(ResourceResponseCallbackBlock)callback
 {
     NSString *path = [[self pathNameForModal:modalClass] stringByAppendingPathComponent:identifier];
-    [self.dataService getPath:path parameters:options success:^(AFHTTPRequestOperation *operation, id responseObject) {
+    [self handleRecord:modalClass atPath:path byMehtod:@"GET" withObject:options withCallback:callback];
+}
+
+- (void)createRecord:(Class)modalClass withObject:(NSDictionary *)obj callback:(ResourceResponseCallbackBlock)callback
+{
+    NSString *path = [self pathNameForModal:modalClass];    
+    [self handleRecord:modalClass atPath:path byMehtod:@"POST" withObject:obj withCallback:callback];
+}
+
+- (void)updateRecord:(Class)modalClass withObject:(NSDictionary *)obj byIdentifier:(NSString *)identifier withCallback:(ResourceResponseCallbackBlock)callback
+{
+    NSString *path = [[self pathNameForModal:modalClass] stringByAppendingPathComponent:identifier];
+    [self handleRecord:modalClass atPath:path byMehtod:@"PUT" withObject:obj withCallback:callback];
+}
+
+- (void)destroyRecord:(Class)modalClass byIdentifier:(NSString *)identifier withOptions:(NSDictionary *)options callback:(ErrorCallbackBlock)callback
+{
+    NSString *path = [[self pathNameForModal:modalClass] stringByAppendingPathComponent:identifier];
+    [self.dataService deletePath:path parameters:options success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        if ([self isGoodResponseForOperation:operation modal:modalClass]) {
+            if (callback) {
+                callback(nil);
+            }
+        } else {
+            if (callback) {
+                callback(SERVICE_RESPONSE_ERROR);
+            }
+        }
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        if (callback) {
+            callback(error);
+        }
+    }];
+}
+
+- (void)handleRecord:(Class)modalClass atPath:(NSString *)path byMehtod:(NSString *)method shouldRefresh:(BOOL)shouldRefresh withObject:(NSDictionary *)obj withCallback:(ResourceResponseCallbackBlock)callback
+{
+    NSURLRequest *request = [self.dataService requestWithMethod:method path:path parameters:obj];
+	AFHTTPRequestOperation *operation = [self.dataService HTTPRequestOperationWithRequest:request success:^(AFHTTPRequestOperation *operation, id responseObject) {
         if ([self isGoodResponseForOperation:operation modal:modalClass]) {
             id obj = [self parseObjectFromResponse:responseObject forModal:modalClass];
-            RModel *one = [self createOrUpdateModal:modalClass withObject:obj autoCommit:YES];
-            if (callback) {
-                callback(nil, one);
+            if (shouldRefresh) {
+                RModel *one = [self createOrUpdateModal:modalClass withObject:obj autoCommit:YES];
+                if (callback) {
+                    callback(nil, one);
+                }
+            } else {
+                if (callback) {
+                    callback(nil, obj);
+                }
             }
         } else {
             if (callback) {
@@ -145,7 +200,15 @@ static NSString *const kDefaultIdentifierName = @"id";
             callback(error, nil);
         }
     }];
+    [self.dataService enqueueHTTPRequestOperation:operation];
 }
+
+- (void)handleRecord:(Class)modalClass atPath:(NSString *)path byMehtod:(NSString *)method withObject:(NSDictionary *)obj withCallback:(ResourceResponseCallbackBlock)callback
+{
+    [self handleRecord:modalClass atPath:path byMehtod:method shouldRefresh:YES withObject:obj withCallback:callback];
+}
+
+#pragma mark - Local Data Access
 
 - (id)createOrUpdateModal:(Class)modalClass withObject:(id)obj autoCommit:(BOOL)autoCommit
 {
@@ -169,27 +232,7 @@ static NSString *const kDefaultIdentifierName = @"id";
     }
     return one;
 }
-
-- (void)createRecord:(Class)modalClass withObject:(NSDictionary *)obj callback:(ResourceResponseCallbackBlock)callback
-{
-
-}
     
-- (void)updateRecord:(Class)modalClass withObject:(NSDictionary *)obj byIdentifier:(NSString *)identifier withCallback:(ResourceResponseCallbackBlock)callback
-{
-    
-}
-    
-- (void)destroyRecord:(Class)modalClass byIdentifier:(NSString *)identifier withOptions:(NSDictionary *)options callback:(ErrorCallbackBlock)callback
-{
-    NSFetchRequest *fRequest = [NSFetchRequest fetchRequestWithEntityName:[modalClass description]];
-    NSArray *results = [self.mainQueueMOC executeFetchRequest:fRequest error:nil];
-    [results enumerateObjectsUsingBlock:^(NSManagedObject *obj, NSUInteger idx, BOOL *stop) {
-        [self.mainQueueMOC deleteObject:obj];
-    }];
-    [self.mainQueueMOC save:nil];
-}
-
 - (id)findOneByModal:(Class)modalClass identifier:(NSString *)identifier
 {
     NSPredicate *predicate = [NSPredicate predicateWithFormat:@"%K = %@", [self identifierKeyNameForModal:modalClass], identifier];
@@ -215,7 +258,12 @@ static NSString *const kDefaultIdentifierName = @"id";
 
 - (void)removeAll:(Class)modalClass
 {
-    
+    NSFetchRequest *fRequest = [NSFetchRequest fetchRequestWithEntityName:[modalClass description]];
+    NSArray *results = [self.mainQueueMOC executeFetchRequest:fRequest error:nil];
+    [results enumerateObjectsUsingBlock:^(NSManagedObject *obj, NSUInteger idx, BOOL *stop) {
+        [self.mainQueueMOC deleteObject:obj];
+    }];
+    [self.mainQueueMOC save:nil];
 }
     
 @end

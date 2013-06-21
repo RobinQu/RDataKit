@@ -36,7 +36,10 @@
 - (void)destroyRecord:(Class)modalClass byIdentifier:(NSString *)identifier withOptions:(NSDictionary *)options callback:(ErrorCallbackBlock)callback;
 - (void)updateRecord:(Class)modalClass withObject:(NSDictionary *)obj byIdentifier:(NSString *)identifier withCallback:(ResourceResponseCallbackBlock)callback;
 - (void)createRecord:(Class)modalClass withObject:(NSDictionary *)obj callback:(ResourceResponseCallbackBlock)callback;
-    
+- (void)handleRecord:(Class)modalClass atPath:(NSString *)path byMehtod:(NSString *)method withObject:(NSDictionary *)obj withCallback:(ResourceResponseCallbackBlock)callback;
+- (void)handleRecord:(Class)modalClass atPath:(NSString *)path byMehtod:(NSString *)method shouldRefresh:(BOOL)shouldRefresh withObject:(NSDictionary *)obj withCallback:(ResourceResponseCallbackBlock)callback;
+
+
   
 //local data methods
 - (id)findOneByModal:(Class)modalClass identifier:(NSString *)identifier;
@@ -49,5 +52,7 @@
 - (id)parseObjectFromResponse:(id)response forModal:(Class)modalClass;
 - (id)createOrUpdateModal:(Class)modalClass withObject:(id)obj autoCommit:(BOOL)autoCommit;
 - (void)removeAll:(Class)modalClass;
+
+- (NSString *)pathNameForModal:(Class)modlaClass;
     
 @end

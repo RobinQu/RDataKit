@@ -11,44 +11,55 @@
 
 
 @implementation RModel
-    
-    @synthesize identifer = _identifer;
-    
-    static RDataContext *ctx;
-    
+
+@synthesize identifer = _identifer;
+
+static RDataContext *ctx;
+
 + (void)regisiterDataContext:(RDataContext *)dataContext
-    {
-        ctx = dataContext;
-    }
+{
+    ctx = dataContext;
+}
     
 + (void)loadAllWithOptions:(NSDictionary *)options callback:(ResourcesResponseCallbackBlock)callback
-    {
-        [ctx loadAllRecords:self withOptions:options callback:callback];
-    }
-    
+{
+    [ctx loadAllRecords:self withOptions:options callback:callback];
+}
+
++ (NSString *)buildPathOptions:(NSDictionary *)options
+{
+    return [ctx pathNameForModal:self];
+}
+
 + (void)loadByIdentifier:(NSString *)identifier withOptions:(NSDictionary *)options callback:(ResourceResponseCallbackBlock)callback
-    {
-        [ctx loadRecord:self byIdentifier:identifier withOptions:options callback:callback];
-    }
-    
+{
+    [ctx loadRecord:self byIdentifier:identifier withOptions:options callback:callback];
+}
+
 + (void)createWithObject:(NSDictionary *)obj callback:(ResourceResponseCallbackBlock)callback
-    {
-        [ctx createRecord:self withObject:obj callback:callback];
-    }
+{
+    [ctx createRecord:self withObject:obj callback:callback];
+}
+
+
++ (void)requestRecord:(Class)modalClass atPath:(NSString *)path method:(NSString *)method withObject:(NSDictionary *)obj callback:(ResourceResponseCallbackBlock)callback forRaw:(BOOL)raw
+{
+    [ctx handleRecord:modalClass atPath:path byMehtod:method shouldRefresh:!raw withObject:obj withCallback:callback];
+}
     
 - (void)updateWithObject:(NSDictionary *)obj callback:(ResourceResponseCallbackBlock)callback
-    {
-        [ctx updateRecord:[self class] withObject:obj byIdentifier:self.identifer withCallback:callback];
-    }
-    
+{
+    [ctx updateRecord:[self class] withObject:obj byIdentifier:self.identifer withCallback:callback];
+}
+
 - (void)destroyWithOptions:(NSDictionary *)options callback:(ErrorCallbackBlock)callback
-    {
-        [ctx destroyRecord:[self class] byIdentifier:self.identifer withOptions:options callback:callback];
-    }
-    
+{
+    [ctx destroyRecord:[self class] byIdentifier:self.identifer withOptions:options callback:callback];
+}
+
 - (void)setupWithObject:(NSDictionary *)obj
-    {
-        NSAssert(![self isKindOfClass:[RModel class]], @"should override this method");
-    }
+{
+    NSAssert(![self isKindOfClass:[RModel class]], @"should override this method");
+}
     
-    @end
+@end
