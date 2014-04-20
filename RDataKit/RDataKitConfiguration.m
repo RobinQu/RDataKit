@@ -15,9 +15,13 @@
     static NSDictionary *dict = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        RLog(@"%@", [NSBundle mainBundle]);
+//        RLog(@"%@", [NSBundle mainBundle]);
         NSString *fp = [[NSBundle mainBundle] pathForResource:@"RDataKit" ofType:@"plist"];
-        dict = [NSDictionary dictionaryWithContentsOfFile:fp];
+        if (fp) {
+            dict = [NSDictionary dictionaryWithContentsOfFile:fp];
+        } else {
+            dict = [[NSUserDefaults standardUserDefaults] objectForKey:@"RDataKit"];
+        }
     });
     NSAssert(dict, @"should have loaded the configuration plist");
     return dict;

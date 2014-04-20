@@ -38,8 +38,6 @@
 - (void)createRecord:(Class)modalClass withObject:(NSDictionary *)obj callback:(ResourceResponseCallbackBlock)callback;
 - (void)handleRecord:(Class)modalClass atPath:(NSString *)path byMehtod:(NSString *)method withObject:(NSDictionary *)obj withCallback:(ResourceResponseCallbackBlock)callback;
 - (void)handleRecord:(Class)modalClass atPath:(NSString *)path byMehtod:(NSString *)method shouldRefresh:(BOOL)shouldRefresh withObject:(NSDictionary *)obj withCallback:(ResourceResponseCallbackBlock)callback;
-
-
   
 //local data methods
 - (id)findOneByModal:(Class)modalClass identifier:(NSString *)identifier;

@@ -12,7 +12,7 @@
 
 @interface RModel : NSManagedObject
     
-@property (nonatomic, assign, readonly) NSString *identifer;
+@property (nonatomic, assign, readonly) NSString *identifier;
 
 + (void)regisiterDataContext:(RDataContext *)dataContext;
 + (void)loadAllWithOptions:(NSDictionary *)options callback:(ResourcesResponseCallbackBlock)callback;
@@ -24,7 +24,17 @@
 - (void)updateWithObject:(NSDictionary *)obj callback:(ResourceResponseCallbackBlock)callback;
 - (void)destroyWithOptions:(NSDictionary *)options callback:(ErrorCallbackBlock)callback;
 
-- (void)setupWithObject:(NSDictionary *)obj;    
-    
-    
+//Local helpers
++ (id)findOneByIdentifier:(NSString *)identifier;
++ (NSArray *)findByPredicate:(NSPredicate *)predicate sortDescriptors:(NSArray *)sortDescriptors;
++ (void)deleteByIdentifier:(NSString *)identifier autoCommit:(BOOL)autoCommit;
+
+@end
+
+
+@interface RModel (Extensible)
+
+- (void)setupWithObject:(NSDictionary *)obj;
+- (void)setupWithObject:(NSDictionary *)obj isUpdate:(BOOL)update;
+
 @end

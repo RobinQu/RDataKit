@@ -12,7 +12,7 @@
 
 @implementation RModel
 
-@synthesize identifer = _identifer;
+@synthesize identifier = _identifier;
 
 static RDataContext *ctx;
 
@@ -49,17 +49,44 @@ static RDataContext *ctx;
     
 - (void)updateWithObject:(NSDictionary *)obj callback:(ResourceResponseCallbackBlock)callback
 {
-    [ctx updateRecord:[self class] withObject:obj byIdentifier:self.identifer withCallback:callback];
+    [ctx updateRecord:[self class] withObject:obj byIdentifier:self.identifier withCallback:callback];
 }
 
 - (void)destroyWithOptions:(NSDictionary *)options callback:(ErrorCallbackBlock)callback
 {
-    [ctx destroyRecord:[self class] byIdentifier:self.identifer withOptions:options callback:callback];
+    [ctx destroyRecord:[self class] byIdentifier:self.identifier withOptions:options callback:callback];
 }
 
-- (void)setupWithObject:(NSDictionary *)obj
+//- (void)setupWithObject:(NSDictionary *)obj
+//{
+//    NSAssert(![self isKindOfClass:[RModel class]], @"should override this method");
+//}
+
++ (id)findOneByIdentifier:(NSString *)identifier
 {
-    NSAssert(![self isKindOfClass:[RModel class]], @"should override this method");
+    return [ctx findOneByModal:self identifier:identifier];
+}
+
++ (NSArray *)findByPredicate:(NSPredicate *)predicate sortDescriptors:(NSArray *)sortDescriptors
+{
+    NSAssert(predicate, @"should at least have a predicate");
+    NSFetchRequest *fRequest = [NSFetchRequest fetchRequestWithEntityName:[self description]];
+    fRequest.predicate = predicate;
+    if (sortDescriptors) {
+        fRequest.sortDescriptors = sortDescriptors;
+    }
+    return [ctx findByFetchRequest:fRequest];
+}
+
++ (void)deleteByIdentifier:(NSString *)identifier autoCommit:(BOOL)autoCommit
+{
+    RModel *obj = [self findOneByIdentifier:identifier];
+    if (obj) {
+        [[ctx mainQueueMOC] deleteObject:obj];
+        if (autoCommit) {
+            [[ctx mainQueueMOC] save:nil];
+        }
+    }
 }
     
 @end

@@ -101,7 +101,6 @@ static void (^ResourceFailureCallback)(AFHTTPRequestOperation *operation, NSErro
 }
 
 #pragma mark - Remote Access Methods
-
 - (void)loadAllRecords:(Class)modalClass withOptions:(NSDictionary *)options callback:(ResourcesResponseCallbackBlock)callback
 {
     NSString *path = [self pathNameForModal:modalClass];
@@ -159,6 +158,10 @@ static void (^ResourceFailureCallback)(AFHTTPRequestOperation *operation, NSErro
     NSString *path = [[self pathNameForModal:modalClass] stringByAppendingPathComponent:identifier];
     [self.dataService deletePath:path parameters:options success:^(AFHTTPRequestOperation *operation, id responseObject) {
         if ([self isGoodResponseForOperation:operation modal:modalClass]) {
+            RModel *toBeDeleted = [self findOneByModal:modalClass identifier:identifier];
+            if (toBeDeleted) {
+                [self.mainQueueMOC deleteObject:toBeDeleted];
+            }
             if (callback) {
                 callback(nil);
             }
@@ -219,13 +222,18 @@ static void (^ResourceFailureCallback)(AFHTTPRequestOperation *operation, NSErro
     NSString *keyname = [self identifierKeyNameForModal:modalClass];
     NSAssert(keyname, @"should have primary key name");
     id one = [self findOneByModal:modalClass identifier:identifier];
-    if (!one) {
+    SEL setup = @selector(setupWithObject:);
+    SEL setup2 = @selector(setupWithObject:isUpdate:);
+    BOOL isUpdate = YES;
+    if (!one) {//perfrom update
         one = [NSEntityDescription insertNewObjectForEntityForName:[modalClass description] inManagedObjectContext:self.mainQueueMOC];
         [one setValue:identifier forKey:keyname];
+        isUpdate = NO;
     }
-    SEL setup = @selector(setupWithObject:);
-    if ([one respondsToSelector:setup]) {
-        [one performSelector:setup withObject:obj];
+    if ([one respondsToSelector:setup2]) {
+        [one setupWithObject:obj isUpdate:isUpdate];
+    } else if ([one respondsToSelector:setup]) {
+        [one setupWithObject:obj];
     }
     if (autoCommit) {
         [self.mainQueueMOC save:nil];

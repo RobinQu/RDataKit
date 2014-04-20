@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>F83E7727-7052-43DC-8E9B-14E635FFEABE</string>
+	<key>IDESourceControlProjectName</key>
+	<string>RDataKit</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>2042800F-10E0-4B6B-A6F7-C31085082523</key>
+		<string>ssh://github.com/RobinQu/RDataKit.git</string>
+		<key>2B20912E-F82C-4C93-8EB2-3BA73AAF2F67</key>
+		<string>git://github.com/adamelliot/Inflections.git</string>
+		<key>5DA82B2C-A437-4D46-B848-EBE8C6D42358</key>
+		<string>https://github.com/AFNetworking/AFNetworking.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>RDataKit.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>2042800F-10E0-4B6B-A6F7-C31085082523</key>
+		<string>../..</string>
+		<key>2B20912E-F82C-4C93-8EB2-3BA73AAF2F67</key>
+		<string>../../Vendor/Inflections</string>
+		<key>5DA82B2C-A437-4D46-B848-EBE8C6D42358</key>
+		<string>../../Vendor/AFNetworking</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>ssh://github.com/RobinQu/RDataKit.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>110</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>2042800F-10E0-4B6B-A6F7-C31085082523</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>2B20912E-F82C-4C93-8EB2-3BA73AAF2F67</string>
+			<key>IDESourceControlWCCName</key>
+			<string>Inflections</string>
+		</dict>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>5DA82B2C-A437-4D46-B848-EBE8C6D42358</string>
+			<key>IDESourceControlWCCName</key>
+			<string>AFNetworking</string>
+		</dict>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>2042800F-10E0-4B6B-A6F7-C31085082523</string>
+			<key>IDESourceControlWCCName</key>
+			<string>RDataKit</string>
+		</dict>
+	</array>
+</dict>
+</plist>
