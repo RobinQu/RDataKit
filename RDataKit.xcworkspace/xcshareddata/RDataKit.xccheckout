@@ -5,7 +5,7 @@
 	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
 	<false/>
 	<key>IDESourceControlProjectIdentifier</key>
-	<string>4B6ACCB0-4904-45DD-A267-D16DB22383D7</string>
+	<string>30D7491A-B050-4265-BDBE-9087102EAC99</string>
 	<key>IDESourceControlProjectName</key>
 	<string>RDataKit</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
@@ -18,15 +18,15 @@
 		<string>ssh://github.com/RobinQu/RDataKit.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
-	<string>RDataKit.xcodeproj/project.xcworkspace</string>
+	<string>RDataKit.xcworkspace</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
 		<key>2B20912E-F82C-4C93-8EB2-3BA73AAF2F67</key>
-		<string>../../Vendor/Inflections</string>
+		<string>../Vendor/Inflections</string>
 		<key>5DA82B2C-A437-4D46-B848-EBE8C6D42358</key>
-		<string>../../Vendor/AFNetworking</string>
+		<string>../Vendor/AFNetworking</string>
 		<key>80546B3E-2841-44C3-8356-8B8D53CFF3DA</key>
-		<string>../..</string>
+		<string>..</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
 	<string>ssh://github.com/RobinQu/RDataKit.git</string>

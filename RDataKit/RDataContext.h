@@ -8,49 +8,45 @@
 
 #import <Foundation/Foundation.h>
 #import "RDataService.h"
+#import "RResponseMapper.h"
+#import "RRouter.h"
 
 @class RModel, RDataContext, AFHTTPRequestOperation;
 
 @protocol RDataContextDelegate <NSObject>
 
 @optional
-- (NSString *)dataContext:(RDataContext *)dataContext identifierKeyNameForModal:(Class)modalClass;
-- (NSString *)dataContext:(RDataContext *)dataContext pathNameForModal:(Class)modlaClass;
-- (BOOL)isGoodResponseForOperation:(AFHTTPRequestOperation *)opearation dataContext:(RDataContext *)dataContext modal:(Class)modalClass;
-- (NSArray *)dataContext:(RDataContext *)dataContext parseObjectsFromResponse:(id)response modal:(Class)modalClass;
-- (id)dataContext:(RDataContext *)dataContext parseObjectFromResponse:(id)response modal:(Class)modalClass;
-- (NSString *)dataContext:(RDataContext *)dataContext identifierKeyPathForResponse:(id)response modal:(Class)modalClass;
+//- (NSString *)dataContext:(RDataContext *)dataContext identifierKeyNameForModal:(Class)modalClass;
+//- (NSString *)dataContext:(RDataContext *)dataContext pathNameForModal:(Class)modlaClass;
+//- (BOOL)isGoodResponseForOperation:(AFHTTPRequestOperation *)opearation dataContext:(RDataContext *)dataContext modal:(Class)modalClass;
+//- (NSArray *)dataContext:(RDataContext *)dataContext parseObjectsFromResponse:(id)response modal:(Class)modalClass;
+//- (id)dataContext:(RDataContext *)dataContext parseObjectFromResponse:(id)response modal:(Class)modalClass;
+//- (NSString *)dataContext:(RDataContext *)dataContext identifierKeyPathForResponse:(id)response modal:(Class)modalClass;
 @end
 
 @interface RDataContext : NSObject
 
-@property (nonatomic, retain) NSManagedObjectContext *mainQueueMOC;
+// main queue moc
+@property (readonly, strong, nonatomic) NSManagedObjectContext *managedObjectContext;
+// background queue moc
+@property (readonly, strong, nonatomic) NSManagedObjectContext *writerManagedObjectContext;
+
+@property (readonly, strong, nonatomic) NSManagedObjectModel *managedObjectModel;
+@property (readonly, strong, nonatomic) NSPersistentStoreCoordinator *persistentStoreCoordinator;
+@property (nonatomic, retain) RResponseMapper *responseMapper;
+@property (nonatomic, retain) RRouter *router;
+
 @property (nonatomic, assign) id<RDataContextDelegate> delegate;
 @property (nonatomic, retain) RDataService* dataService;
-    
-+ (id)sharedDataContext;
-    
-//remote data methods
-- (void)loadAllRecords:(Class)modalClass withOptions:(NSDictionary *)options callback:(ResourcesResponseCallbackBlock)callback;
-- (void)loadRecord:(Class)modalClass byIdentifier:(NSString *)identifier withOptions:(NSDictionary *)options callback:(ResourceResponseCallbackBlock)callback;
-- (void)destroyRecord:(Class)modalClass byIdentifier:(NSString *)identifier withOptions:(NSDictionary *)options callback:(ErrorCallbackBlock)callback;
-- (void)updateRecord:(Class)modalClass withObject:(NSDictionary *)obj byIdentifier:(NSString *)identifier withCallback:(ResourceResponseCallbackBlock)callback;
-- (void)createRecord:(Class)modalClass withObject:(NSDictionary *)obj callback:(ResourceResponseCallbackBlock)callback;
-- (void)handleRecord:(Class)modalClass atPath:(NSString *)path byMehtod:(NSString *)method withObject:(NSDictionary *)obj withCallback:(ResourceResponseCallbackBlock)callback;
-- (void)handleRecord:(Class)modalClass atPath:(NSString *)path byMehtod:(NSString *)method shouldRefresh:(BOOL)shouldRefresh withObject:(NSDictionary *)obj withCallback:(ResourceResponseCallbackBlock)callback;
-  
-//local data methods
-- (id)findOneByModal:(Class)modalClass identifier:(NSString *)identifier;
-- (NSArray *)findByFetchRequest:(NSFetchRequest *)fetchRequest;
 
-- (NSString *)identifierKeyNameForModal:(Class)modalClass;
-- (NSString *)keyPathForObject:(id)object ofModal:(Class)modalClass;
-- (BOOL)isGoodResponseForOperation:(AFHTTPRequestOperation*)opearation modal:(Class)modalClass;
-- (NSArray *)parseObjectsFromResponse:(id)response forModal:(Class)modalClass;
-- (id)parseObjectFromResponse:(id)response forModal:(Class)modalClass;
-- (id)createOrUpdateModal:(Class)modalClass withObject:(id)obj autoCommit:(BOOL)autoCommit;
-- (void)removeAll:(Class)modalClass;
+- (instancetype)initWithModelURL:(NSURL *)modelURL storeURL:(NSURL *)storeURL;
 
-- (NSString *)pathNameForModal:(Class)modlaClass;
-    
+- (NSManagedObjectContext *)makeChildContext;
+- (void)commitChildContext:(NSManagedObjectContext *)context callback:(ErrorCallbackBlock)callback;
+
+// Sync Model CRUD
+- (id)findOneInContext:(NSManagedObjectContext *)context byModal:(Class)modalClass identifier:(NSString *)identifier;
+- (id)createOrUpdateInContext:(NSManagedObjectContext *)context WithObject:(id)obj ofClass:(Class)modelClass;
+- (void)removeAllInContext:(NSManagedObjectContext *)context ofClass:(Class)modelClass ;
+
 @end

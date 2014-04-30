@@ -8,6 +8,7 @@
 
 #import "RModel.h"
 #import "RDataContext.h"
+#import <AFNetworking.h>
 
 
 @implementation RModel
@@ -20,73 +21,117 @@ static RDataContext *ctx;
 {
     ctx = dataContext;
 }
-    
-+ (void)loadAllWithOptions:(NSDictionary *)options callback:(ResourcesResponseCallbackBlock)callback
+
+// Handling GET to index
++ (void)loadAllWithOptions:(NSDictionary *)options callback:(ResponseCallbackBlock)callback
 {
-    [ctx loadAllRecords:self withOptions:options callback:callback];
+    NSAssert(callback, @"should provide request callback");
+    Class modelClass = [self class];
+    NSString *path = [ctx.router pathNameForModal: modelClass];
+    [ctx.dataService GET:path parameters:options success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        if ([ctx.responseMapper isGoodResponseForOperation:operation model:modelClass]) {
+            __block NSManagedObjectContext *temperaroyMoc = [ctx makeChildContext];
+            [temperaroyMoc performBlock:^{
+                NSArray *objs = [ctx.responseMapper parseObjectsFromResponse:responseObject forModel:modelClass];
+                NSMutableArray *results = [NSMutableArray array];
+                for (int i=0; i<[objs count]; i++) {
+                    RModel *one = [ctx createOrUpdateInContext:temperaroyMoc WithObject:[objs objectAtIndex:i] ofClass:modelClass];
+                    if (one) {
+                        [results addObject:one];
+                    } else {
+                        RLog(@"failed to process obj %@", [objs objectAtIndex:i]);
+                    }
+                }
+                [ctx commitChildContext:temperaroyMoc callback:^(NSError *error) {
+                    callback(error, results);
+                }];
+            }];
+        } else {
+            callback(SERVICE_RESPONSE_ERROR, nil);
+        }
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        callback(error, operation);
+    }];
 }
 
-+ (NSString *)buildPathOptions:(NSDictionary *)options
+// Handling GET, PUT, DELETE for a single record; POST request should pass nil as identifier
++ (void)handleRecordByIdentifier:(NSString *)identifier byMethod:(NSString *)method withObject:(NSDictionary*)object callback:(ResponseCallbackBlock)callback
 {
-    return [ctx pathNameForModal:self];
+    NSAssert(callback, @"should provide request callback");
+    Class modelClass = [self class];
+    
+    NSString *fullpath = [ctx.router pathNameForModal:modelClass];
+    if (identifier) {
+        fullpath = [fullpath stringByAppendingPathComponent:identifier];
+    }
+    NSURLRequest *request = [ctx.dataService.requestSerializer requestWithMethod:method URLString:fullpath parameters:object];
+    AFHTTPRequestOperation *operation = [ctx.dataService HTTPRequestOperationWithRequest:request success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        Class modelClass = [self class];
+        if ([ctx.responseMapper isGoodResponseForOperation:operation model:modelClass]) {
+            __block id obj = [ctx.responseMapper parseObjectFromResponse:responseObject forModel:modelClass];
+            __block NSManagedObjectContext *temperaroyMoc = [ctx makeChildContext];
+            [temperaroyMoc performBlock:^{
+                RModel *one = nil;
+                if ([method isEqualToString:@"DELETE"]) {
+                    one = [ctx findOneInContext:temperaroyMoc byModal:modelClass identifier:identifier];
+                    [temperaroyMoc deleteObject:one];
+                } else {//GET, CREATE, PUT, POST
+                    one = [ctx createOrUpdateInContext:temperaroyMoc WithObject:obj ofClass:modelClass];
+                }
+                [ctx commitChildContext:temperaroyMoc callback:^(NSError *error) {
+                    callback(error, one);
+                }];
+                
+            }];
+        } else {
+            if (callback) {
+                callback(SERVICE_RESPONSE_ERROR, nil);
+            }
+        }
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        if (callback) {
+            callback(error, operation);
+        }
+    }];
+    
+    [ctx.dataService.operationQueue addOperation:operation];
 }
 
 + (void)loadByIdentifier:(NSString *)identifier withOptions:(NSDictionary *)options callback:(ResourceResponseCallbackBlock)callback
 {
-    [ctx loadRecord:self byIdentifier:identifier withOptions:options callback:callback];
+    [self handleRecordByIdentifier:identifier byMethod:@"GET" withObject:options callback:callback];
 }
 
 + (void)createWithObject:(NSDictionary *)obj callback:(ResourceResponseCallbackBlock)callback
 {
-    [ctx createRecord:self withObject:obj callback:callback];
+    [self handleRecordByIdentifier:nil byMethod:@"POST" withObject:obj callback:callback];
 }
 
-
-+ (void)requestRecord:(Class)modalClass atPath:(NSString *)path method:(NSString *)method withObject:(NSDictionary *)obj callback:(ResourceResponseCallbackBlock)callback forRaw:(BOOL)raw
++ (void)updateByIdentifier:(NSString *)identifier withOptions:(NSDictionary *)options callback:(ResourceResponseCallbackBlock)callback
 {
-    [ctx handleRecord:modalClass atPath:path byMehtod:method shouldRefresh:!raw withObject:obj withCallback:callback];
+    [self handleRecordByIdentifier:identifier byMethod:@"PUT" withObject:options callback:callback];
 }
-    
+
++ (void)deleteByIdentifier:(NSString *)identifier withOptions:(NSDictionary *)options callback:(ResourceResponseCallbackBlock)callback
+{
+    [self handleRecordByIdentifier:identifier byMethod:@"DELETE" withObject:options callback:callback];
+}
+
+- (NSString *)getDefaultIdentifier
+{
+    NSString *identifierKey = [ctx.responseMapper identifierKeyNameForModel:[self class]];
+    NSString *identifier = [self valueForKey:identifierKey];
+    return identifier;
+}
+
 - (void)updateWithObject:(NSDictionary *)obj callback:(ResourceResponseCallbackBlock)callback
 {
-    [ctx updateRecord:[self class] withObject:obj byIdentifier:self.identifier withCallback:callback];
+    [[self class] updateByIdentifier:[self getDefaultIdentifier] withOptions:obj callback:callback];
 }
 
-- (void)destroyWithOptions:(NSDictionary *)options callback:(ErrorCallbackBlock)callback
+- (void)destroyWithOptions:(NSDictionary *)options callback:(ResourceResponseCallbackBlock)callback
 {
-    [ctx destroyRecord:[self class] byIdentifier:self.identifier withOptions:options callback:callback];
+    [[self class] deleteByIdentifier:[self getDefaultIdentifier] withOptions:options callback:callback];
 }
 
-//- (void)setupWithObject:(NSDictionary *)obj
-//{
-//    NSAssert(![self isKindOfClass:[RModel class]], @"should override this method");
-//}
-
-+ (id)findOneByIdentifier:(NSString *)identifier
-{
-    return [ctx findOneByModal:self identifier:identifier];
-}
-
-+ (NSArray *)findByPredicate:(NSPredicate *)predicate sortDescriptors:(NSArray *)sortDescriptors
-{
-    NSAssert(predicate, @"should at least have a predicate");
-    NSFetchRequest *fRequest = [NSFetchRequest fetchRequestWithEntityName:[self description]];
-    fRequest.predicate = predicate;
-    if (sortDescriptors) {
-        fRequest.sortDescriptors = sortDescriptors;
-    }
-    return [ctx findByFetchRequest:fRequest];
-}
-
-+ (void)deleteByIdentifier:(NSString *)identifier autoCommit:(BOOL)autoCommit
-{
-    RModel *obj = [self findOneByIdentifier:identifier];
-    if (obj) {
-        [[ctx mainQueueMOC] deleteObject:obj];
-        if (autoCommit) {
-            [[ctx mainQueueMOC] save:nil];
-        }
-    }
-}
-    
 @end

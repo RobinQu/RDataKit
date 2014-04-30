@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "AFHTTPClient.h"
+#import <AFNetworking.h>
 
 @class RDataService, AFHTTPRequestOperation;
 
@@ -19,10 +19,12 @@
 @end
 
 
-@interface RDataService : AFHTTPClient
+@interface RDataService : AFHTTPRequestOperationManager
     
 @property (nonatomic, assign) id<RDataServiceDelegate> delegate;
 
-+ (id)defaultDataService;
++ (instancetype)defaultDataService;
+
+
     
 @end

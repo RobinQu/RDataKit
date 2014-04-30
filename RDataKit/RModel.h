@@ -15,25 +15,22 @@
 @property (nonatomic, assign, readonly) NSString *identifier;
 
 + (void)regisiterDataContext:(RDataContext *)dataContext;
-+ (void)loadAllWithOptions:(NSDictionary *)options callback:(ResourcesResponseCallbackBlock)callback;
+
++ (void)loadAllWithOptions:(NSDictionary *)options callback:(ResponseCallbackBlock)callback;
+
 + (void)loadByIdentifier:(NSString *)identifier withOptions:(NSDictionary *)options callback:(ResourceResponseCallbackBlock)callback;
-+ (void)requestRecord:(Class)modalClass atPath:(NSString *)path method:(NSString *)method withObject:(NSDictionary *)obj callback:(ResourceResponseCallbackBlock)callback forRaw:(BOOL)raw;
 + (void)createWithObject:(NSDictionary *)obj callback:(ResourceResponseCallbackBlock)callback;
-+ (NSString *)buildPathOptions:(NSDictionary *)options;
++ (void)updateByIdentifier:(NSString *)identifier withOptions:(NSDictionary *)options callback:(ResourceResponseCallbackBlock)callback;
++ (void)deleteByIdentifier:(NSString *)identifier withOptions:(NSDictionary *)options callback:(ResourceResponseCallbackBlock)callback;
 
 - (void)updateWithObject:(NSDictionary *)obj callback:(ResourceResponseCallbackBlock)callback;
-- (void)destroyWithOptions:(NSDictionary *)options callback:(ErrorCallbackBlock)callback;
-
-//Local helpers
-+ (id)findOneByIdentifier:(NSString *)identifier;
-+ (NSArray *)findByPredicate:(NSPredicate *)predicate sortDescriptors:(NSArray *)sortDescriptors;
-+ (void)deleteByIdentifier:(NSString *)identifier autoCommit:(BOOL)autoCommit;
+- (void)destroyWithOptions:(NSDictionary *)options callback:(ResourceResponseCallbackBlock)callback;
 
 @end
 
-
 @interface RModel (Extensible)
 
+- (NSString *)getDefaultIdentifier;
 - (void)setupWithObject:(NSDictionary *)obj;
 - (void)setupWithObject:(NSDictionary *)obj isUpdate:(BOOL)update;
 

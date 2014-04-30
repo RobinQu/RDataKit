@@ -27,6 +27,8 @@ typedef void(^ResourcesResponseCallbackBlock)(NSError *error, NSArray *records);
 typedef void(^ErrorCallbackBlock)(NSError *error);
 typedef void(^ResourceResponseCallbackBlock)(NSError *error, id one);
 
+typedef void(^ResponseCallbackBlock)(NSError *error, id result);
+
 
 #endif
 

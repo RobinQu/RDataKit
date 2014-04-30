@@ -18,7 +18,7 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/RobinQu/RDataKit.git", :tag => "0.0.1"}
 
 
-  s.ios.deployment_target = '5.0'
+  s.ios.deployment_target = '6.0'
   s.osx.deployment_target = '10.7'
 
   s.source_files = 'RDataKit', 'RDataKit/**/*.{h,m}'
@@ -30,8 +30,9 @@ Pod::Spec.new do |s|
 
   s.requires_arc = true
 
-  s.dependency 'AFNetworking', '~> 1.3.0'
+  s.dependency 'AFNetworking', "~> 2.0.0"
   s.dependency 'Inflections', '~>1.0.0'
+  s.dependency "RegexKitLite",   "~> 4.0"
   
   
   s.prefix_header_contents = <<-EOS

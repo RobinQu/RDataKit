@@ -8,225 +8,152 @@
 
 #import "RDataContext.h"
 #import "RDataKitConfiguration.h"
-#import "NSString+Inflections.h"
 #import "AFHTTPRequestOperation.h"
 #import "RModel.h"
 #import <objc/runtime.h>
 
-static NSString *const kDefaultIdentifierName = @"id";
-static void (^ResourceSuccessCallback)(AFHTTPRequestOperation *operation, id responseObject, ResourceResponseCallbackBlock callback) = ^(AFHTTPRequestOperation *operation, id responseObject, ResourceResponseCallbackBlock callback) {
-    
-};
-static void (^ResourceFailureCallback)(AFHTTPRequestOperation *operation, NSError *error) = ^(AFHTTPRequestOperation *operation, NSError *error) {
-    
-};
 
+@interface RDataContext ()
+
+@property (nonatomic, retain) NSURL *storeURL;
+@property (nonatomic, retain) NSURL *modelURL;
+
+@end
 
 @implementation RDataContext
 
-+ (id)sharedDataContext
+@synthesize managedObjectContext = _managedObjectContext;
+@synthesize managedObjectModel = _managedObjectModel;
+@synthesize persistentStoreCoordinator = _persistentStoreCoordinator;
+@synthesize writerManagedObjectContext = _writerManagedObjectContext;
+
+
+- (instancetype)initWithModelURL:(NSURL *)modelURL storeURL:(NSURL *)storeURL
 {
-    NSAssert([self isSubclassOfClass:[RDataContext class]], @"should invoke on subclasses");
-    return nil;
+    self = [super init];
+    if (self) {
+        self.storeURL = storeURL;
+        self.modelURL = modelURL;
+        self.responseMapper = [RResponseMapper defaultResponseMapper];
+        self.router = [RRouter defaultRouter];
+    }
+    return self;
 }
 
-#pragma mark - Data Helpers
+#pragma mark - Core Data stack
+
+
+// The main context is on background queue
+// Returns the managed object context for the application.
+// If the context doesn't already exist, it is created and bound to the persistent store coordinator for the application.
+- (NSManagedObjectContext *)managedObjectContext
+{
+    if (_managedObjectContext != nil) {
+        return _managedObjectContext;
+    }
     
-- (NSString *)pathNameForModal:(Class)modlaClass
-{
-    NSDictionary *map = [[RDataKitConfiguration get] valueForKey:@"routes"];
-    NSString *path = nil;
-    NSString *plural = [[modlaClass description] pluralize];
-    if (map && map.count) {
-        path = [map valueForKey:plural];
+    NSPersistentStoreCoordinator *coordinator = [self persistentStoreCoordinator];
+    if (coordinator != nil) {
+        _managedObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
+        _managedObjectContext.parentContext = self.writerManagedObjectContext;
     }
-    if (!path) {
-        path = [plural copy];
+    return _managedObjectContext;
+}
+
+// Writer context is on background queue, so that saving won't block main UI
+- (NSManagedObjectContext *)writerManagedObjectContext
+{
+    if (_writerManagedObjectContext) {
+        return _writerManagedObjectContext;
     }
-    return path;
-}
-
-- (BOOL)isGoodResponseForOperation:(AFHTTPRequestOperation *)opearation modal:(Class)modalClass
-{
-    if (self.delegate && [self.delegate respondsToSelector:@selector(isGoodResponseForOperation:dataContext:modal:)]) {
-        return [self.delegate isGoodResponseForOperation:opearation dataContext:self modal:modalClass];
-    } else {
-        NSInteger statusCode = opearation.response.statusCode;
-        return statusCode >= 200 && statusCode < 400;
+    NSPersistentStoreCoordinator *coordinator = [self persistentStoreCoordinator];
+    if (coordinator != nil) {
+        _writerManagedObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
+        [_writerManagedObjectContext setPersistentStoreCoordinator:coordinator];
     }
+    return _writerManagedObjectContext;
 }
 
-- (NSString *)identifierKeyNameForModal:(Class)modalClass
+// Returns the managed object model for the application.
+// If the model doesn't already exist, it is created from the application's model.
+- (NSManagedObjectModel *)managedObjectModel
 {
-    NSDictionary *conf = [RDataKitConfiguration get];
-    if ([conf valueForKey:@"identifierName"]) {
-        return [conf valueForKey:@"identifierName"];
+    if (_managedObjectModel != nil) {
+        return _managedObjectModel;
     }
-    if (self.delegate && [self.delegate respondsToSelector:@selector(dataContext:identifierKeyNameForModal:)]) {
-        return [self.delegate dataContext:self identifierKeyNameForModal:modalClass];
+    _managedObjectModel = [[NSManagedObjectModel alloc] initWithContentsOfURL:self.modelURL];
+    return _managedObjectModel;
+}
+
+// Returns the persistent store coordinator for the application.
+// If the coordinator doesn't already exist, it is created and the application's store added to it.
+- (NSPersistentStoreCoordinator *)persistentStoreCoordinator
+{
+    if (_persistentStoreCoordinator != nil) {
+        return _persistentStoreCoordinator;
     }
-    return kDefaultIdentifierName;
-}
-
-- (NSString *)keyPathForObject:(id)object ofModal:(Class)modalClass
-{
-    NSDictionary *conf = [RDataKitConfiguration get];
-    if ([conf valueForKey:@"identifierKeyPath"]) {
-        return [conf valueForKey:@"identifierKeyPath"];
+    
+    NSError *error = nil;
+    _persistentStoreCoordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:[self managedObjectModel]];
+    if (![_persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:self.storeURL options:nil error:&error]) {
+        [[NSFileManager defaultManager] removeItemAtURL:self.storeURL error:nil];
+        NSLog(@"Unresolved error %@, %@", error, [error userInfo]);
     }
-    if (self.delegate && [self.delegate respondsToSelector:@selector(dataContext:identifierKeyPathForResponse:modal:)]) {
-        return [self.delegate dataContext:self identifierKeyPathForResponse:object modal:modalClass];
-    }
-    return kDefaultIdentifierName;
-}
-
-- (NSDictionary *)parseObjectFromResponse:(id)response forModal:(Class)modalClass
-{
-    if (self.delegate && [self.delegate respondsToSelector:@selector(dataContext:parseObjectFromResponse:modal:)]) {
-        return [self.delegate dataContext:self parseObjectFromResponse:response modal:modalClass];
-    }
-    NSString *resourceName = [modalClass description];
-    if ([response valueForKey:resourceName]) {
-        return [response valueForKey:resourceName];
-    }
-    return response;
-}
-
-- (NSArray *)parseObjectsFromResponse:(id)response forModal:(Class)modalClass
-{
-    if (self.delegate && [self.delegate respondsToSelector:@selector(dataContext:parseObjectsFromResponse:modal:)]) {
-        return [self.delegate dataContext:self parseObjectsFromResponse:response modal:modalClass];
-    }
-    return response;
-}
-
-#pragma mark - Remote Access Methods
-- (void)loadAllRecords:(Class)modalClass withOptions:(NSDictionary *)options callback:(ResourcesResponseCallbackBlock)callback
-{
-    NSString *path = [self pathNameForModal:modalClass];
-    [self.dataService getPath:path parameters:options success:^(AFHTTPRequestOperation *operation, id responseObject) {
-        if ([self isGoodResponseForOperation:operation modal:modalClass]) {
-            NSArray *objs = [self parseObjectsFromResponse:responseObject forModal:modalClass];
-            NSMutableArray *results = [NSMutableArray array];
-            [objs enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-                RModel *one = [self createOrUpdateModal:modalClass withObject:obj autoCommit:NO];
-                if (one) {
-                    [results addObject:one];
-                } else {
-                    RLog(@"failed to process obj %@", obj);
-                }
-            }];
-            NSError *saveError = nil;
-            [self.mainQueueMOC save:&saveError];
-            if (saveError) {
-                callback(saveError, nil);
-            } else {
-                callback(nil, results);
-            }
-        } else {
-            if (callback) {
-                callback(SERVICE_RESPONSE_ERROR, nil);
-            }
-        }
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        if (callback) {
-            callback(error, nil);
-        }
-    }];
-}
-
-- (void)loadRecord:(Class)modalClass byIdentifier:(NSString *)identifier withOptions:(NSDictionary *)options callback:(ResourceResponseCallbackBlock)callback
-{
-    NSString *path = [[self pathNameForModal:modalClass] stringByAppendingPathComponent:identifier];
-    [self handleRecord:modalClass atPath:path byMehtod:@"GET" withObject:options withCallback:callback];
-}
-
-- (void)createRecord:(Class)modalClass withObject:(NSDictionary *)obj callback:(ResourceResponseCallbackBlock)callback
-{
-    NSString *path = [self pathNameForModal:modalClass];    
-    [self handleRecord:modalClass atPath:path byMehtod:@"POST" withObject:obj withCallback:callback];
-}
-
-- (void)updateRecord:(Class)modalClass withObject:(NSDictionary *)obj byIdentifier:(NSString *)identifier withCallback:(ResourceResponseCallbackBlock)callback
-{
-    NSString *path = [[self pathNameForModal:modalClass] stringByAppendingPathComponent:identifier];
-    [self handleRecord:modalClass atPath:path byMehtod:@"PUT" withObject:obj withCallback:callback];
-}
-
-- (void)destroyRecord:(Class)modalClass byIdentifier:(NSString *)identifier withOptions:(NSDictionary *)options callback:(ErrorCallbackBlock)callback
-{
-    NSString *path = [[self pathNameForModal:modalClass] stringByAppendingPathComponent:identifier];
-    [self.dataService deletePath:path parameters:options success:^(AFHTTPRequestOperation *operation, id responseObject) {
-        if ([self isGoodResponseForOperation:operation modal:modalClass]) {
-            RModel *toBeDeleted = [self findOneByModal:modalClass identifier:identifier];
-            if (toBeDeleted) {
-                [self.mainQueueMOC deleteObject:toBeDeleted];
-            }
-            if (callback) {
-                callback(nil);
-            }
-        } else {
-            if (callback) {
-                callback(SERVICE_RESPONSE_ERROR);
-            }
-        }
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        if (callback) {
-            callback(error);
-        }
-    }];
-}
-
-- (void)handleRecord:(Class)modalClass atPath:(NSString *)path byMehtod:(NSString *)method shouldRefresh:(BOOL)shouldRefresh withObject:(NSDictionary *)obj withCallback:(ResourceResponseCallbackBlock)callback
-{
-    NSURLRequest *request = [self.dataService requestWithMethod:method path:path parameters:obj];
-	AFHTTPRequestOperation *operation = [self.dataService HTTPRequestOperationWithRequest:request success:^(AFHTTPRequestOperation *operation, id responseObject) {
-        if ([self isGoodResponseForOperation:operation modal:modalClass]) {
-            id obj = [self parseObjectFromResponse:responseObject forModal:modalClass];
-            if (shouldRefresh) {
-                RModel *one = [self createOrUpdateModal:modalClass withObject:obj autoCommit:YES];
-                if (callback) {
-                    callback(nil, one);
-                }
-            } else {
-                if (callback) {
-                    callback(nil, obj);
-                }
-            }
-        } else {
-            if (callback) {
-                callback(SERVICE_RESPONSE_ERROR, nil);
-            }
-        }
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        if (callback) {
-            callback(error, nil);
-        }
-    }];
-    [self.dataService enqueueHTTPRequestOperation:operation];
-}
-
-- (void)handleRecord:(Class)modalClass atPath:(NSString *)path byMehtod:(NSString *)method withObject:(NSDictionary *)obj withCallback:(ResourceResponseCallbackBlock)callback
-{
-    [self handleRecord:modalClass atPath:path byMehtod:method shouldRefresh:YES withObject:obj withCallback:callback];
+    
+    return _persistentStoreCoordinator;
 }
 
 #pragma mark - Local Data Access
 
-- (id)createOrUpdateModal:(Class)modalClass withObject:(id)obj autoCommit:(BOOL)autoCommit
+// Child context helper
+
+- (NSManagedObjectContext *)makeChildContext
 {
-    NSString *keyPath = [self keyPathForObject:obj ofModal:modalClass];
+    __block NSManagedObjectContext *temperaroyMoc = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
+    temperaroyMoc.parentContext = self.managedObjectContext;
+    return temperaroyMoc;
+}
+
+- (void)commitChildContext:(NSManagedObjectContext *)context callback:(void(^)(NSError *error))callback
+{
+    __block NSError *error = nil;
+    __block NSManagedObjectContext *writerMoc = self.writerManagedObjectContext;
+    __block NSManagedObjectContext *mainMOC = self.managedObjectContext;
+    
+    if (![context save:&error]) {
+        RLog(@"temp moc error %@", error);
+        callback(error);
+    };
+    [mainMOC performBlock:^{
+        if (![mainMOC save:&error]) {
+            RLog(@"main moc error %@", error);
+            callback(error);
+        };
+        [writerMoc performBlock:^{
+            if (![writerMoc save:&error]) {
+                RLog(@"writer moc error %@", error);
+                callback(error);
+            }
+        }];
+    }];
+}
+
+
+// Create or update a model with object in given context
+- (id)createOrUpdateInContext:(NSManagedObjectContext *)context WithObject:(id)obj ofClass:(Class)modelClass;
+{
+    NSString *keyPath = [self.responseMapper keyPathForObject:obj ofModel:modelClass];
     NSAssert(keyPath, @"should have keyPath");
     NSString *identifier = [obj valueForKeyPath:keyPath];
     NSAssert(identifier, @"should have identifier");
-    NSString *keyname = [self identifierKeyNameForModal:modalClass];
+    NSString *keyname = [self.responseMapper identifierKeyNameForModel:modelClass];
     NSAssert(keyname, @"should have primary key name");
-    id one = [self findOneByModal:modalClass identifier:identifier];
+    id one = [self findOneInContext:context byModal:modelClass identifier:identifier];
     SEL setup = @selector(setupWithObject:);
     SEL setup2 = @selector(setupWithObject:isUpdate:);
     BOOL isUpdate = YES;
-    if (!one) {//perfrom update
-        one = [NSEntityDescription insertNewObjectForEntityForName:[modalClass description] inManagedObjectContext:self.mainQueueMOC];
+    if (!one) {//perfrom creation
+        one = [NSEntityDescription insertNewObjectForEntityForName:[modelClass description] inManagedObjectContext:context];
         [one setValue:identifier forKey:keyname];
         isUpdate = NO;
     }
@@ -235,43 +162,31 @@ static void (^ResourceFailureCallback)(AFHTTPRequestOperation *operation, NSErro
     } else if ([one respondsToSelector:setup]) {
         [one setupWithObject:obj];
     }
-    if (autoCommit) {
-        [self.mainQueueMOC save:nil];
-    }
     return one;
 }
-    
-- (id)findOneByModal:(Class)modalClass identifier:(NSString *)identifier
+
+
+- (id)findOneInContext:(NSManagedObjectContext *)context byModal:(Class)modalClass identifier:(NSString *)identifier;
 {
-    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"%K = %@", [self identifierKeyNameForModal:modalClass], identifier];
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"%K = %@", [self.responseMapper identifierKeyNameForModel:modalClass], identifier];
     NSFetchRequest *fRequest = [NSFetchRequest fetchRequestWithEntityName:[modalClass description]];
     fRequest.predicate = predicate;
-    NSArray *results = [self findByFetchRequest:fRequest];
+    NSArray *results = [context executeFetchRequest:fRequest error:nil];
     if (results.count) {
         return [results objectAtIndex:0];
     } else {
         return nil;
     }
+
 }
 
-- (NSArray *)findByFetchRequest:(NSFetchRequest *)fetchRequest
+- (void)removeAllInContext:(NSManagedObjectContext *)context ofClass:(Class)modelClass ;
 {
-    NSError *error = nil;
-    NSArray *results = [self.mainQueueMOC executeFetchRequest:fetchRequest error:&error];
-    if (error) {
-        NSLog(@"error whiling fetching %@", error);
-    }
-    return results;
-}
-
-- (void)removeAll:(Class)modalClass
-{
-    NSFetchRequest *fRequest = [NSFetchRequest fetchRequestWithEntityName:[modalClass description]];
-    NSArray *results = [self.mainQueueMOC executeFetchRequest:fRequest error:nil];
+    NSFetchRequest *fRequest = [NSFetchRequest fetchRequestWithEntityName:[modelClass description]];
+    NSArray *results = [self.managedObjectContext executeFetchRequest:fRequest error:nil];
     [results enumerateObjectsUsingBlock:^(NSManagedObject *obj, NSUInteger idx, BOOL *stop) {
-        [self.mainQueueMOC deleteObject:obj];
+        [context deleteObject:obj];
     }];
-    [self.mainQueueMOC save:nil];
 }
     
 @end
