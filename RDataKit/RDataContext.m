@@ -151,6 +151,7 @@
     id one = [self findOneInContext:context byModal:modelClass identifier:identifier];
     SEL setup = @selector(setupWithObject:);
     SEL setup2 = @selector(setupWithObject:isUpdate:);
+    SEL setup3 = @selector(setupWithObject:isUpdate:inContext:);
     BOOL isUpdate = YES;
     if (!one) {//perfrom creation
         one = [NSEntityDescription insertNewObjectForEntityForName:[modelClass description] inManagedObjectContext:context];
@@ -161,6 +162,8 @@
         [one setupWithObject:obj isUpdate:isUpdate];
     } else if ([one respondsToSelector:setup]) {
         [one setupWithObject:obj];
+    } else if ([one respondsToSelector:setup3]) {
+        [one setupWithObject:obj isUpdate:isUpdate inContext:context];
     }
     return one;
 }

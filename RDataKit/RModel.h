@@ -33,5 +33,6 @@
 - (NSString *)getDefaultIdentifier;
 - (void)setupWithObject:(NSDictionary *)obj;
 - (void)setupWithObject:(NSDictionary *)obj isUpdate:(BOOL)update;
+- (void)setupWithObject:(NSDictionary *)obj isUpdate:(BOOL)update inContext:(NSManagedObjectContext *)context;
 
 @end
