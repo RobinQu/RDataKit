@@ -6,13 +6,12 @@
 //  Copyright (c) 2013年 Robin Qu. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
+#ifndef RDataKit_h
+#define RDataKit_h
 
+#import "RModel.h"
+#import "RDataContext.h"
+#import "RTraditionalDataContext.h"
+#import "RNestedDataContext.h"
 
-
-
-@interface RDataKit : NSObject
-
-
-    
-@end
+#endif

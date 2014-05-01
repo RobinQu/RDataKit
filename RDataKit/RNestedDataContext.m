@@ -25,7 +25,6 @@
     NSPersistentStoreCoordinator *coordinator = [self persistentStoreCoordinator];
     if (coordinator != nil) {
         _managedObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
-        _managedObjectContext.persistentStoreCoordinator = coordinator;
         _managedObjectContext.parentContext = self.writerManagedObjectContext;
     }
     return _managedObjectContext;
@@ -74,8 +73,8 @@
         [writerMoc performBlock:^{
             if (![writerMoc save:&error]) {
                 RLog(@"writer moc error %@", error);
-                callback(error);
             }
+            callback(error);
         }];
     }];
 }
@@ -83,7 +82,6 @@
 - (void)performBlock:(BOOL (^)(NSManagedObjectContext *))block afterCommit:(ErrorCallbackBlock)commitCallback
 {
     __block NSManagedObjectContext *temperaryMoc = [self makeChildContext];
-    temperaryMoc.parentContext = self.managedObjectContext;
     [temperaryMoc performBlock:^{
         BOOL shouldCommit = block(temperaryMoc);
         if (shouldCommit) {

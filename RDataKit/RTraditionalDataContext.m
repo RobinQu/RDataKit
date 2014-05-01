@@ -25,9 +25,10 @@
     if (shouldCommit) {
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(contextDidSave:) name:NSManagedObjectContextDidSaveNotification object:moc];
         NSError *error = nil;
-        if ([moc save:&error]) {
+        if (![moc save:&error]) {
             RLog(@"commit error %@", error);
         }
+        commitCallback(error);
     }
 }
 

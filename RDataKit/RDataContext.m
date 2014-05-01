@@ -34,6 +34,7 @@
         self.modelURL = modelURL;
         self.responseMapper = [RResponseMapper defaultResponseMapper];
         self.router = [RRouter defaultRouter];
+        self.dataService = [RDataService defaultDataService];
     }
     return self;
 }
@@ -120,12 +121,12 @@
         [one setValue:identifier forKey:keyname];
         isUpdate = NO;
     }
-    if ([one respondsToSelector:setup2]) {
+    if ([one respondsToSelector:setup3]) {
+        [one setupWithObject:obj isUpdate:isUpdate inContext:context];
+    } else if ([one respondsToSelector:setup2]) {
         [one setupWithObject:obj isUpdate:isUpdate];
     } else if ([one respondsToSelector:setup]) {
         [one setupWithObject:obj];
-    } else if ([one respondsToSelector:setup3]) {
-        [one setupWithObject:obj isUpdate:isUpdate inContext:context];
     }
     return one;
 }

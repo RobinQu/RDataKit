@@ -23,31 +23,30 @@ static RDataContext *ctx;
     ctx = dataContext;
 }
 
-// Handling GET to index
-+ (void)loadAllWithOptions:(NSDictionary *)options callback:(ResponseCallbackBlock)callback
++ (void)handleRecordsByMethod:(NSString *)method atPath:(NSString *)path  withObject:(NSDictionary*)object callback:(ResponseCallbackBlock)callback
 {
-//    NSAssert(callback, @"should provide request callback");
     if (!callback) {
         callback = noop;
     }
     Class modelClass = [self class];
-    NSString *path = [ctx.router pathNameForModal: modelClass];
-    [ctx.dataService GET:path parameters:options success:^(AFHTTPRequestOperation *operation, id responseObject) {
+    [ctx.dataService GET:path parameters:object success:^(AFHTTPRequestOperation *operation, id responseObject) {
         if ([ctx.responseMapper isGoodResponseForOperation:operation model:modelClass]) {
             NSArray *objs = [ctx.responseMapper parseObjectsFromResponse:responseObject forModel:modelClass];
             __block NSMutableArray *results = [NSMutableArray array];
             [ctx performBlock:^BOOL(NSManagedObjectContext *moc) {
+                __block RModel *one = nil;
                 for (int i=0; i<[objs count]; i++) {
-                    RModel *one = [ctx createOrUpdateInContext:moc WithObject:[objs objectAtIndex:i] ofClass:modelClass];
+                    one = [ctx createOrUpdateInContext:moc WithObject:[objs objectAtIndex:i] ofClass:modelClass];
                     if (one) {
                         [results addObject:one];
                     } else {
                         RLog(@"failed to process obj %@", [objs objectAtIndex:i]);
                     }
                 }
+                callback(nil, results);
                 return YES;
             } afterCommit:^(NSError *error) {
-                callback(error, results);
+                //                callback(error, results);
             }];
         } else {
             callback(SERVICE_RESPONSE_ERROR, nil);
@@ -57,18 +56,31 @@ static RDataContext *ctx;
     }];
 }
 
+// Handling GET to index
++ (void)loadAllWithOptions:(NSDictionary *)options callback:(ResponseCallbackBlock)callback
+{
+    Class modelClass = [self class];
+    NSString *path = [ctx.router pathNameForModal: modelClass];
+    [self handleRecordsByMethod:@"GET" atPath:path withObject:options callback:callback];
+}
+
 // Handling GET, PUT, DELETE for a single record; POST request should pass nil as identifier
 + (void)handleRecordByIdentifier:(NSString *)identifier byMethod:(NSString *)method withObject:(NSDictionary*)object callback:(ResponseCallbackBlock)callback
 {
-    if (!callback) {
-        callback = noop;
-    }
     Class modelClass = [self class];
-    
     NSString *fullpath = [ctx.router pathNameForModal:modelClass];
     if (identifier) {
         fullpath = [fullpath stringByAppendingPathComponent:identifier];
     }
+    [self handleRecordByMethod:method atPath:fullpath withObject:object callback:callback];
+}
+
++ (void)handleRecordByMethod:(NSString *)method atPath:(NSString *)path withObject:(NSDictionary*)object callback:(ResponseCallbackBlock)callback
+{
+    if (!callback) {
+        callback = noop;
+    }
+    NSString *fullpath = [ctx.dataService.baseURL.absoluteString stringByAppendingPathComponent:path];
     NSURLRequest *request = [ctx.dataService.requestSerializer requestWithMethod:method URLString:fullpath parameters:object];
     AFHTTPRequestOperation *operation = [ctx.dataService HTTPRequestOperationWithRequest:request success:^(AFHTTPRequestOperation *operation, id responseObject) {
         Class modelClass = [self class];
@@ -77,14 +89,18 @@ static RDataContext *ctx;
             __block RModel *one = nil;
             [ctx performBlock:^BOOL(NSManagedObjectContext *moc) {
                 if ([method isEqualToString:@"DELETE"]) {
+                    NSString *identifierKeyPath = [ctx.responseMapper keyPathForObject:obj ofModel:modelClass];
+                    NSString *identifier = [obj valueForKey:identifierKeyPath];
+                    NSAssert(identifier, @"should have found identifier in response");
                     one = [ctx findOneInContext:moc byModel:modelClass identifier:identifier];
                     [moc deleteObject:one];
                 } else {//GET, CREATE, PUT, POST
                     one = [ctx createOrUpdateInContext:moc WithObject:obj ofClass:modelClass];
                 }
+                callback(nil, one);
                 return YES;
             } afterCommit:^(NSError *error) {
-                callback(error, one);
+                
             }];
         } else {
             if (callback) {

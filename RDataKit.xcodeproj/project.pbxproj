@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		25324B0C176C6678006E6F40 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25324B0B176C6678006E6F40 /* Foundation.framework */; };
 		25324B11176C6678006E6F40 /* RDataKit.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 25324B10176C6678006E6F40 /* RDataKit.h */; };
-		25324B13176C6678006E6F40 /* RDataKit.m in Sources */ = {isa = PBXBuildFile; fileRef = 25324B12176C6678006E6F40 /* RDataKit.m */; };
 		25324B1A176C6678006E6F40 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25324B19176C6678006E6F40 /* XCTest.framework */; };
 		25324B1B176C6678006E6F40 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25324B0B176C6678006E6F40 /* Foundation.framework */; };
 		25324B1D176C6678006E6F40 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25324B1C176C6678006E6F40 /* UIKit.framework */; };
@@ -61,7 +60,6 @@
 		25324B0B176C6678006E6F40 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		25324B0F176C6678006E6F40 /* RDataKit-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RDataKit-Prefix.pch"; sourceTree = "<group>"; };
 		25324B10176C6678006E6F40 /* RDataKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RDataKit.h; sourceTree = "<group>"; };
-		25324B12176C6678006E6F40 /* RDataKit.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RDataKit.m; sourceTree = "<group>"; };
 		25324B18176C6678006E6F40 /* RDataKitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RDataKitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		25324B19176C6678006E6F40 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		25324B1C176C6678006E6F40 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
@@ -154,7 +152,6 @@
 				25ACBE6F1911E0AB007228E2 /* DataContext */,
 				25324B0E176C6678006E6F40 /* Supporting Files */,
 				25324B10176C6678006E6F40 /* RDataKit.h */,
-				25324B12176C6678006E6F40 /* RDataKit.m */,
 				25324B5A176C7709006E6F40 /* RDataService.h */,
 				25ACBE661910DAD4007228E2 /* RRouter.h */,
 				25ACBE671910DAD4007228E2 /* RRouter.m */,
@@ -332,7 +329,6 @@
 				25324B64176C7C39006E6F40 /* RModel.m in Sources */,
 				25324B69176C8FA5006E6F40 /* RDataKitConfiguration.m in Sources */,
 				25ACBE651910D8CB007228E2 /* RResponseMapper.m in Sources */,
-				25324B13176C6678006E6F40 /* RDataKit.m in Sources */,
 				25ACBE681910DAD4007228E2 /* RRouter.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
