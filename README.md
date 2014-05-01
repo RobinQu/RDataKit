@@ -13,13 +13,15 @@ Lightweight ORM Frameworks built upon CoreData
 
 
 * RDataContext
-    * Manifest of the core data stack
-* RTraditonalDataContext
-    * Data operations are synced across threads using notifications
-* RNestedDataContext
-    * Data operations are synced across threads using nested `NSManagedObjectContext`. Possibly causing deadlocks.
+
+  Manifest of the core data stack. Holding the primary `NSManagedObjectContext` and `NSPersistenceCoordinator`.
+
+    * RTraditonalDataContext
+        * Data operations are synced across threads using notifications
+    * RNestedDataContext
+        * Data operations are synced across threads using nested `NSManagedObjectContext`. Possibly causing deadlocks.
 * RDataService
-    * Subclass of `AFHTTPRequestOperationManager` of [AFNetworking 2.0](https://github.com/AFNetworking/AFNetworking)
+    * Subclass of `AFHTTPRequestOperationManager` of [AFNetworking 2.x](https://github.com/AFNetworking/AFNetworking)
 * RModel
     * Subclass or `NSManagedObject`
     * Helpers for dealing with remote RESTful API, like create `createWithObject:callback:`
