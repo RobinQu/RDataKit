@@ -137,6 +137,7 @@
     NSPredicate *predicate = [NSPredicate predicateWithFormat:@"%K = %@", [self.responseMapper identifierKeyNameForModel:modelClass], identifier];
     NSFetchRequest *fRequest = [NSFetchRequest fetchRequestWithEntityName:[modelClass description]];
     fRequest.predicate = predicate;
+//    fRequest.returnsObjectsAsFaults = NO;
     NSError *error = nil;
     // fetch in main moc only
     NSArray *results = [context executeFetchRequest:fRequest error:&error];
@@ -164,8 +165,13 @@
 // Should implement in subclasses
 - (NSManagedObjectContext *)makeChildContext
 {
-//    NSAssert(@"", @"");
+    RLog(@"should implement in subclass");
     return nil;
+}
+
+- (void)performBlock:(BOOL (^)(NSManagedObjectContext *))block afterCommit:(ErrorCallbackBlock)commitCallback
+{
+    RLog(@"should implement in subclass");
 }
 
 @end

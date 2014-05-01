@@ -43,10 +43,10 @@ static RDataContext *ctx;
                         RLog(@"failed to process obj %@", [objs objectAtIndex:i]);
                     }
                 }
-                callback(nil, results);
+//                callback(nil, results);
                 return YES;
             } afterCommit:^(NSError *error) {
-                //                callback(error, results);
+                callback(error, results);
             }];
         } else {
             callback(SERVICE_RESPONSE_ERROR, nil);
@@ -97,10 +97,10 @@ static RDataContext *ctx;
                 } else {//GET, CREATE, PUT, POST
                     one = [ctx createOrUpdateInContext:moc WithObject:obj ofClass:modelClass];
                 }
-                callback(nil, one);
+//                callback(nil, one);
                 return YES;
             } afterCommit:^(NSError *error) {
-                
+                callback(error, one);
             }];
         } else {
             if (callback) {
