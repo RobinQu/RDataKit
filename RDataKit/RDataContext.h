@@ -41,11 +41,12 @@
 
 - (instancetype)initWithModelURL:(NSURL *)modelURL storeURL:(NSURL *)storeURL;
 
+- (void)saveContext;
 - (NSManagedObjectContext *)makeChildContext;
 - (void)commitChildContext:(NSManagedObjectContext *)context callback:(ErrorCallbackBlock)callback;
 
 // Sync Model CRUD
-- (id)findOneInContext:(NSManagedObjectContext *)context byModal:(Class)modalClass identifier:(NSString *)identifier;
+- (id)findOneInContext:(NSManagedObjectContext *)context byModel:(Class)modelClass identifier:(NSString *)identifier;
 - (id)createOrUpdateInContext:(NSManagedObjectContext *)context WithObject:(id)obj ofClass:(Class)modelClass;
 - (void)removeAllInContext:(NSManagedObjectContext *)context ofClass:(Class)modelClass ;
 

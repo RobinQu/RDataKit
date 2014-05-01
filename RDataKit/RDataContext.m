@@ -138,6 +138,18 @@
     }];
 }
 
+- (void)saveContext
+{
+    NSError *error = nil;
+    NSManagedObjectContext *context = self.managedObjectContext;
+    if (context) {
+        if ([context hasChanges] && ![context save:&error]) {
+            RLog(@"Unresolved error %@, %@", error, [error userInfo]);
+        }
+    }
+}
+
+
 
 // Create or update a model with object in given context
 - (id)createOrUpdateInContext:(NSManagedObjectContext *)context WithObject:(id)obj ofClass:(Class)modelClass;
@@ -148,7 +160,7 @@
     NSAssert(identifier, @"should have identifier");
     NSString *keyname = [self.responseMapper identifierKeyNameForModel:modelClass];
     NSAssert(keyname, @"should have primary key name");
-    id one = [self findOneInContext:context byModal:modelClass identifier:identifier];
+    id one = [self findOneInContext:context byModel:modelClass identifier:identifier];
     SEL setup = @selector(setupWithObject:);
     SEL setup2 = @selector(setupWithObject:isUpdate:);
     SEL setup3 = @selector(setupWithObject:isUpdate:inContext:);
@@ -169,12 +181,18 @@
 }
 
 
-- (id)findOneInContext:(NSManagedObjectContext *)context byModal:(Class)modalClass identifier:(NSString *)identifier;
+- (id)findOneInContext:(NSManagedObjectContext *)context byModel:(Class)modelClass identifier:(NSString *)identifier;
 {
-    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"%K = %@", [self.responseMapper identifierKeyNameForModel:modalClass], identifier];
-    NSFetchRequest *fRequest = [NSFetchRequest fetchRequestWithEntityName:[modalClass description]];
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"%K = %@", [self.responseMapper identifierKeyNameForModel:modelClass], identifier];
+    NSFetchRequest *fRequest = [NSFetchRequest fetchRequestWithEntityName:[modelClass description]];
     fRequest.predicate = predicate;
-    NSArray *results = [context executeFetchRequest:fRequest error:nil];
+    NSError *error = nil;
+    // fetch in main moc only
+    NSArray *results = [context executeFetchRequest:fRequest error:&error];
+//    NSArray *results = [self.managedObjectContext executeFetchRequest:fRequest error:&error];
+    if (error) {
+        RLog(@"failed to find %@ by identifier %@: %@", [modelClass description], identifier, error);
+    }
     if (results.count) {
         return [results objectAtIndex:0];
     } else {

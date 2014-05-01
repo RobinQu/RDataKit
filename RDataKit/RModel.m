@@ -10,6 +10,7 @@
 #import "RDataContext.h"
 #import <AFNetworking.h>
 
+static ResponseCallbackBlock noop = ^(NSError *error, id one){};
 
 @implementation RModel
 
@@ -25,7 +26,10 @@ static RDataContext *ctx;
 // Handling GET to index
 + (void)loadAllWithOptions:(NSDictionary *)options callback:(ResponseCallbackBlock)callback
 {
-    NSAssert(callback, @"should provide request callback");
+//    NSAssert(callback, @"should provide request callback");
+    if (!callback) {
+        callback = noop;
+    }
     Class modelClass = [self class];
     NSString *path = [ctx.router pathNameForModal: modelClass];
     [ctx.dataService GET:path parameters:options success:^(AFHTTPRequestOperation *operation, id responseObject) {
@@ -57,7 +61,9 @@ static RDataContext *ctx;
 // Handling GET, PUT, DELETE for a single record; POST request should pass nil as identifier
 + (void)handleRecordByIdentifier:(NSString *)identifier byMethod:(NSString *)method withObject:(NSDictionary*)object callback:(ResponseCallbackBlock)callback
 {
-    NSAssert(callback, @"should provide request callback");
+    if (!callback) {
+        callback = noop;
+    }
     Class modelClass = [self class];
     
     NSString *fullpath = [ctx.router pathNameForModal:modelClass];
@@ -73,7 +79,7 @@ static RDataContext *ctx;
             [temperaroyMoc performBlock:^{
                 RModel *one = nil;
                 if ([method isEqualToString:@"DELETE"]) {
-                    one = [ctx findOneInContext:temperaroyMoc byModal:modelClass identifier:identifier];
+                    one = [ctx findOneInContext:temperaroyMoc byModel:modelClass identifier:identifier];
                     [temperaroyMoc deleteObject:one];
                 } else {//GET, CREATE, PUT, POST
                     one = [ctx createOrUpdateInContext:temperaroyMoc WithObject:obj ofClass:modelClass];
