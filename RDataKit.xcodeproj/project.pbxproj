@@ -25,9 +25,10 @@
 		25324B65176C7C39006E6F40 /* RModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 25324B63176C7C39006E6F40 /* RModel.m */; };
 		25324B69176C8FA5006E6F40 /* RDataKitConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = 25324B68176C8FA5006E6F40 /* RDataKitConfiguration.m */; };
 		25324B6A176C8FA5006E6F40 /* RDataKitConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = 25324B68176C8FA5006E6F40 /* RDataKitConfiguration.m */; };
-		25324B6F176C9FC3006E6F40 /* libicucore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 25324B6E176C9FC3006E6F40 /* libicucore.dylib */; };
 		25ACBE651910D8CB007228E2 /* RResponseMapper.m in Sources */ = {isa = PBXBuildFile; fileRef = 25ACBE641910D8CB007228E2 /* RResponseMapper.m */; };
 		25ACBE681910DAD4007228E2 /* RRouter.m in Sources */ = {isa = PBXBuildFile; fileRef = 25ACBE671910DAD4007228E2 /* RRouter.m */; };
+		25ACBE6B1911DF31007228E2 /* RTraditionalDataContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 25ACBE6A1911DF31007228E2 /* RTraditionalDataContext.m */; };
+		25ACBE6E1911E07B007228E2 /* RNestedDataContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 25ACBE6D1911E07B007228E2 /* RNestedDataContext.m */; };
 		E92B968F53DF47E099F6C1A5 /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 54623EACAAD946679472BCD1 /* libPods.a */; };
 /* End PBXBuildFile section */
 
@@ -82,6 +83,10 @@
 		25ACBE641910D8CB007228E2 /* RResponseMapper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RResponseMapper.m; sourceTree = "<group>"; };
 		25ACBE661910DAD4007228E2 /* RRouter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RRouter.h; sourceTree = "<group>"; };
 		25ACBE671910DAD4007228E2 /* RRouter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RRouter.m; sourceTree = "<group>"; };
+		25ACBE691911DF31007228E2 /* RTraditionalDataContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RTraditionalDataContext.h; sourceTree = "<group>"; };
+		25ACBE6A1911DF31007228E2 /* RTraditionalDataContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RTraditionalDataContext.m; sourceTree = "<group>"; };
+		25ACBE6C1911E07B007228E2 /* RNestedDataContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RNestedDataContext.h; sourceTree = "<group>"; };
+		25ACBE6D1911E07B007228E2 /* RNestedDataContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RNestedDataContext.m; sourceTree = "<group>"; };
 		54623EACAAD946679472BCD1 /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -90,7 +95,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				25324B6F176C9FC3006E6F40 /* libicucore.dylib in Frameworks */,
 				25324B3A176C6B91006E6F40 /* CoreData.framework in Frameworks */,
 				25324B0C176C6678006E6F40 /* Foundation.framework in Frameworks */,
 				E92B968F53DF47E099F6C1A5 /* libPods.a in Frameworks */,
@@ -147,6 +151,7 @@
 		25324B0D176C6678006E6F40 /* RDataKit */ = {
 			isa = PBXGroup;
 			children = (
+				25ACBE6F1911E0AB007228E2 /* DataContext */,
 				25324B0E176C6678006E6F40 /* Supporting Files */,
 				25324B10176C6678006E6F40 /* RDataKit.h */,
 				25324B12176C6678006E6F40 /* RDataKit.m */,
@@ -154,8 +159,6 @@
 				25ACBE661910DAD4007228E2 /* RRouter.h */,
 				25ACBE671910DAD4007228E2 /* RRouter.m */,
 				25324B5B176C7709006E6F40 /* RDataService.m */,
-				25324B5E176C7B7A006E6F40 /* RDataContext.h */,
-				25324B5F176C7B7A006E6F40 /* RDataContext.m */,
 				25324B62176C7C39006E6F40 /* RModel.h */,
 				25324B63176C7C39006E6F40 /* RModel.m */,
 				25324B66176C7C9E006E6F40 /* RDataKitCommons.h */,
@@ -191,6 +194,19 @@
 				25324B24176C6678006E6F40 /* InfoPlist.strings */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		25ACBE6F1911E0AB007228E2 /* DataContext */ = {
+			isa = PBXGroup;
+			children = (
+				25324B5E176C7B7A006E6F40 /* RDataContext.h */,
+				25324B5F176C7B7A006E6F40 /* RDataContext.m */,
+				25ACBE691911DF31007228E2 /* RTraditionalDataContext.h */,
+				25ACBE6A1911DF31007228E2 /* RTraditionalDataContext.m */,
+				25ACBE6C1911E07B007228E2 /* RNestedDataContext.h */,
+				25ACBE6D1911E07B007228E2 /* RNestedDataContext.m */,
+			);
+			name = DataContext;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -309,7 +325,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				25ACBE6B1911DF31007228E2 /* RTraditionalDataContext.m in Sources */,
 				25324B60176C7B7A006E6F40 /* RDataContext.m in Sources */,
+				25ACBE6E1911E07B007228E2 /* RNestedDataContext.m in Sources */,
 				25324B5C176C7709006E6F40 /* RDataService.m in Sources */,
 				25324B64176C7C39006E6F40 /* RModel.m in Sources */,
 				25324B69176C8FA5006E6F40 /* RDataKitConfiguration.m in Sources */,

@@ -34,21 +34,20 @@ static RDataContext *ctx;
     NSString *path = [ctx.router pathNameForModal: modelClass];
     [ctx.dataService GET:path parameters:options success:^(AFHTTPRequestOperation *operation, id responseObject) {
         if ([ctx.responseMapper isGoodResponseForOperation:operation model:modelClass]) {
-            __block NSManagedObjectContext *temperaroyMoc = [ctx makeChildContext];
-            [temperaroyMoc performBlock:^{
-                NSArray *objs = [ctx.responseMapper parseObjectsFromResponse:responseObject forModel:modelClass];
-                NSMutableArray *results = [NSMutableArray array];
+            NSArray *objs = [ctx.responseMapper parseObjectsFromResponse:responseObject forModel:modelClass];
+            __block NSMutableArray *results = [NSMutableArray array];
+            [ctx performBlock:^BOOL(NSManagedObjectContext *moc) {
                 for (int i=0; i<[objs count]; i++) {
-                    RModel *one = [ctx createOrUpdateInContext:temperaroyMoc WithObject:[objs objectAtIndex:i] ofClass:modelClass];
+                    RModel *one = [ctx createOrUpdateInContext:moc WithObject:[objs objectAtIndex:i] ofClass:modelClass];
                     if (one) {
                         [results addObject:one];
                     } else {
                         RLog(@"failed to process obj %@", [objs objectAtIndex:i]);
                     }
                 }
-                [ctx commitChildContext:temperaroyMoc callback:^(NSError *error) {
-                    callback(error, results);
-                }];
+                return YES;
+            } afterCommit:^(NSError *error) {
+                callback(error, results);
             }];
         } else {
             callback(SERVICE_RESPONSE_ERROR, nil);
@@ -75,19 +74,17 @@ static RDataContext *ctx;
         Class modelClass = [self class];
         if ([ctx.responseMapper isGoodResponseForOperation:operation model:modelClass]) {
             __block id obj = [ctx.responseMapper parseObjectFromResponse:responseObject forModel:modelClass];
-            __block NSManagedObjectContext *temperaroyMoc = [ctx makeChildContext];
-            [temperaroyMoc performBlock:^{
-                RModel *one = nil;
+            __block RModel *one = nil;
+            [ctx performBlock:^BOOL(NSManagedObjectContext *moc) {
                 if ([method isEqualToString:@"DELETE"]) {
-                    one = [ctx findOneInContext:temperaroyMoc byModel:modelClass identifier:identifier];
-                    [temperaroyMoc deleteObject:one];
+                    one = [ctx findOneInContext:moc byModel:modelClass identifier:identifier];
+                    [moc deleteObject:one];
                 } else {//GET, CREATE, PUT, POST
-                    one = [ctx createOrUpdateInContext:temperaroyMoc WithObject:obj ofClass:modelClass];
+                    one = [ctx createOrUpdateInContext:moc WithObject:obj ofClass:modelClass];
                 }
-                [ctx commitChildContext:temperaroyMoc callback:^(NSError *error) {
-                    callback(error, one);
-                }];
-                
+                return YES;
+            } afterCommit:^(NSError *error) {
+                callback(error, one);
             }];
         } else {
             if (callback) {

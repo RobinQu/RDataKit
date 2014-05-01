@@ -29,7 +29,6 @@
 // main queue moc
 @property (readonly, strong, nonatomic) NSManagedObjectContext *managedObjectContext;
 // background queue moc
-@property (readonly, strong, nonatomic) NSManagedObjectContext *writerManagedObjectContext;
 
 @property (readonly, strong, nonatomic) NSManagedObjectModel *managedObjectModel;
 @property (readonly, strong, nonatomic) NSPersistentStoreCoordinator *persistentStoreCoordinator;
@@ -41,13 +40,16 @@
 
 - (instancetype)initWithModelURL:(NSURL *)modelURL storeURL:(NSURL *)storeURL;
 
-- (void)saveContext;
-- (NSManagedObjectContext *)makeChildContext;
-- (void)commitChildContext:(NSManagedObjectContext *)context callback:(ErrorCallbackBlock)callback;
+// Async operation
+- (void)performBlock:(BOOL(^)(NSManagedObjectContext *moc))block afterCommit:(ErrorCallbackBlock)commitCallback;
 
 // Sync Model CRUD
+- (void)saveContext;
 - (id)findOneInContext:(NSManagedObjectContext *)context byModel:(Class)modelClass identifier:(NSString *)identifier;
 - (id)createOrUpdateInContext:(NSManagedObjectContext *)context WithObject:(id)obj ofClass:(Class)modelClass;
 - (void)removeAllInContext:(NSManagedObjectContext *)context ofClass:(Class)modelClass ;
+- (NSManagedObjectContext *)makeChildContext;
+
+
 
 @end

@@ -25,8 +25,6 @@
 @synthesize managedObjectContext = _managedObjectContext;
 @synthesize managedObjectModel = _managedObjectModel;
 @synthesize persistentStoreCoordinator = _persistentStoreCoordinator;
-@synthesize writerManagedObjectContext = _writerManagedObjectContext;
-
 
 - (instancetype)initWithModelURL:(NSURL *)modelURL storeURL:(NSURL *)storeURL
 {
@@ -54,25 +52,12 @@
     
     NSPersistentStoreCoordinator *coordinator = [self persistentStoreCoordinator];
     if (coordinator != nil) {
-        _managedObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
-        _managedObjectContext.parentContext = self.writerManagedObjectContext;
+        _managedObjectContext = [[NSManagedObjectContext alloc] init];
+        _managedObjectContext.persistentStoreCoordinator = coordinator;
     }
     return _managedObjectContext;
 }
 
-// Writer context is on background queue, so that saving won't block main UI
-- (NSManagedObjectContext *)writerManagedObjectContext
-{
-    if (_writerManagedObjectContext) {
-        return _writerManagedObjectContext;
-    }
-    NSPersistentStoreCoordinator *coordinator = [self persistentStoreCoordinator];
-    if (coordinator != nil) {
-        _writerManagedObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
-        [_writerManagedObjectContext setPersistentStoreCoordinator:coordinator];
-    }
-    return _writerManagedObjectContext;
-}
 
 // Returns the managed object model for the application.
 // If the model doesn't already exist, it is created from the application's model.
@@ -103,41 +88,8 @@
     return _persistentStoreCoordinator;
 }
 
-#pragma mark - Local Data Access
 
-// Child context helper
-
-- (NSManagedObjectContext *)makeChildContext
-{
-    __block NSManagedObjectContext *temperaroyMoc = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
-    temperaroyMoc.parentContext = self.managedObjectContext;
-    return temperaroyMoc;
-}
-
-- (void)commitChildContext:(NSManagedObjectContext *)context callback:(void(^)(NSError *error))callback
-{
-    __block NSError *error = nil;
-    __block NSManagedObjectContext *writerMoc = self.writerManagedObjectContext;
-    __block NSManagedObjectContext *mainMOC = self.managedObjectContext;
-    
-    if (![context save:&error]) {
-        RLog(@"temp moc error %@", error);
-        callback(error);
-    };
-    [mainMOC performBlock:^{
-        if (![mainMOC save:&error]) {
-            RLog(@"main moc error %@", error);
-            callback(error);
-        };
-        [writerMoc performBlock:^{
-            if (![writerMoc save:&error]) {
-                RLog(@"writer moc error %@", error);
-                callback(error);
-            }
-        }];
-    }];
-}
-
+// Local data helpers
 - (void)saveContext
 {
     NSError *error = nil;
@@ -148,8 +100,6 @@
         }
     }
 }
-
-
 
 // Create or update a model with object in given context
 - (id)createOrUpdateInContext:(NSManagedObjectContext *)context WithObject:(id)obj ofClass:(Class)modelClass;
@@ -189,7 +139,7 @@
     NSError *error = nil;
     // fetch in main moc only
     NSArray *results = [context executeFetchRequest:fRequest error:&error];
-//    NSArray *results = [self.managedObjectContext executeFetchRequest:fRequest error:&error];
+    //    NSArray *results = [self.managedObjectContext executeFetchRequest:fRequest error:&error];
     if (error) {
         RLog(@"failed to find %@ by identifier %@: %@", [modelClass description], identifier, error);
     }
@@ -198,7 +148,7 @@
     } else {
         return nil;
     }
-
+    
 }
 
 - (void)removeAllInContext:(NSManagedObjectContext *)context ofClass:(Class)modelClass ;
@@ -209,5 +159,12 @@
         [context deleteObject:obj];
     }];
 }
-    
+
+// Should implement in subclasses
+- (NSManagedObjectContext *)makeChildContext
+{
+//    NSAssert(@"", @"");
+    return nil;
+}
+
 @end
