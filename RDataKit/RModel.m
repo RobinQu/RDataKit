@@ -136,12 +136,6 @@ static RDataContext *ctx;
     [self handleRecordByIdentifier:identifier byMethod:@"DELETE" withObject:options callback:callback];
 }
 
-- (NSString *)getDefaultIdentifier
-{
-    NSString *identifierKey = [ctx.responseMapper identifierKeyNameForModel:[self class]];
-    NSString *identifier = [self valueForKey:identifierKey];
-    return identifier;
-}
 
 - (void)updateWithObject:(NSDictionary *)obj callback:(ResourceResponseCallbackBlock)callback
 {
@@ -151,6 +145,33 @@ static RDataContext *ctx;
 - (void)destroyWithOptions:(NSDictionary *)options callback:(ResourceResponseCallbackBlock)callback
 {
     [[self class] deleteByIdentifier:[self getDefaultIdentifier] withOptions:options callback:callback];
+}
+
+@end
+
+
+@implementation RModel (Extensible)
+
+- (NSString *)getDefaultIdentifier
+{
+    NSString *identifierKey = [ctx.responseMapper identifierKeyNameForModel:[self class]];
+    NSString *identifier = [self valueForKey:identifierKey];
+    return identifier;
+}
+
+- (void)setupWithObject:(NSDictionary *)obj
+{
+    RLog(@"should implment in subclass");
+}
+
+- (void)setupWithObject:(NSDictionary *)obj isUpdate:(BOOL)update
+{
+    RLog(@"should implment in subclass");
+}
+
+- (void)setupWithObject:(NSDictionary *)obj isUpdate:(BOOL)update inContext:(NSManagedObjectContext *)context
+{
+    RLog(@"should implment in subclass");
 }
 
 @end

@@ -22,19 +22,23 @@
     NSManagedObjectContext *moc = [self makeChildContext];
     BOOL shouldCommit = block(moc);
     if (shouldCommit) {
-        NSError *error = nil;
+        __block NSError *error = nil;
         __block id observer = nil;
         observer = [[NSNotificationCenter defaultCenter] addObserverForName:NSManagedObjectContextDidSaveNotification object:moc queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
             [self.managedObjectContext mergeChangesFromContextDidSaveNotification:note];
             // cancel the observer after a single merge
             [[NSNotificationCenter defaultCenter] removeObserver:observer name:NSManagedObjectContextDidSaveNotification object:moc];
-            commitCallback(error);
+            
+            if (![self.managedObjectContext save:&error]) {
+                RLog(@"main context commit error %@", error);
+            }
+            dispatch_async(dispatch_get_main_queue(), ^{//ensure it's run on main thread
+                commitCallback(error);
+            });
         }];
         if (![moc save:&error]) {
             RLog(@"commit error %@", error);
         }
-        
-
     }
 }
 
