@@ -15,7 +15,6 @@
     static NSDictionary *dict = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-//        RLog(@"%@", [NSBundle mainBundle]);
         NSString *fp = [[NSBundle mainBundle] pathForResource:@"RDataKit" ofType:@"plist"];
         if (fp) {
             dict = [NSDictionary dictionaryWithContentsOfFile:fp];
