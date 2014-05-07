@@ -23,6 +23,36 @@ static RDataContext *ctx;
     ctx = dataContext;
 }
 
++ (void)refreshWithOptions:(NSDictionary *)options callback:(ResponseCallbackBlock)callback
+{
+    if (!callback) {
+        callback = noop;
+    }
+    [self loadAllWithOptions:options callback:^(NSError *error, NSArray* results) {
+        NSString *identifierKey = [ctx.responseMapper identifierKeyNameForModel:[self class]];
+        __block NSArray *newIDs = [results valueForKey:identifierKey];
+        if (newIDs.count) {
+            [ctx performBlock:^BOOL(NSManagedObjectContext *moc) {
+                NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] initWithEntityName:[[self class] description]];
+                fetchRequest.predicate = [NSPredicate predicateWithFormat:@"NOT (%K IN %@)", identifierKey, newIDs];
+                NSError *error = nil;
+                NSArray *old = [moc executeFetchRequest:fetchRequest error:&error];
+                if (error) {
+                    RLog(@"fetch error %@", error);
+                }
+                [old enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+                    [moc deleteObject:obj];
+                }];
+                return YES;
+            } afterCommit:^(NSError *error) {
+                callback(error, results);
+            }];
+        } else {
+            callback(nil, results);
+        }
+    }];
+}
+
 + (void)handleRecordsByMethod:(NSString *)method atPath:(NSString *)path  withObject:(NSDictionary*)object callback:(ResponseCallbackBlock)callback
 {
     if (!callback) {

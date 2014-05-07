@@ -27,12 +27,8 @@ static NSString *const kDefaultIdentifierName = @"identifier";
 
 - (BOOL)isGoodResponseForOperation:(AFHTTPRequestOperation *)opearation model:(Class)modelClass
 {
-//    if (self.delegate && [self.delegate respondsToSelector:@selector(isGoodResponseForOperation:dataContext:modal:)]) {
-//        return [self.delegate isGoodResponseForOperation:opearation dataContext:self modal:modalClass];
-//    } else {
-        NSInteger statusCode = opearation.response.statusCode;
-        return statusCode >= 200 && statusCode < 400;
-//    }
+    NSInteger statusCode = opearation.response.statusCode;
+    return statusCode >= 200 && statusCode < 400;
 }
 
 - (NSString *)identifierKeyNameForModel:(Class)modalClass
@@ -41,9 +37,6 @@ static NSString *const kDefaultIdentifierName = @"identifier";
     if ([conf valueForKey:@"identifierName"]) {
         return [conf valueForKey:@"identifierName"];
     }
-//    if (self.delegate && [self.delegate respondsToSelector:@selector(dataContext:identifierKeyNameForModal:)]) {
-//        return [self.delegate dataContext:self identifierKeyNameForModal:modalClass];
-//    }
     return kDefaultIdentifierName;
 }
 
@@ -53,17 +46,11 @@ static NSString *const kDefaultIdentifierName = @"identifier";
     if ([conf valueForKey:@"identifierKeyPath"]) {
         return [conf valueForKey:@"identifierKeyPath"];
     }
-//    if (self.delegate && [self.delegate respondsToSelector:@selector(dataContext:identifierKeyPathForResponse:modal:)]) {
-//        return [self.delegate dataContext:self identifierKeyPathForResponse:object modal:modalClass];
-//    }
     return kDefaultIdentifierName;
 }
 
 - (NSDictionary *)parseObjectFromResponse:(id)response forModel:(Class)modalClass
 {
-//    if (self.delegate && [self.delegate respondsToSelector:@selector(dataContext:parseObjectFromResponse:modal:)]) {
-//        return [self.delegate dataContext:self parseObjectFromResponse:response modal:modalClass];
-//    }
     NSString *resourceName = [[modalClass description] lowercaseString];
     if ([response valueForKey:resourceName]) {
         return [response valueForKey:resourceName];
@@ -73,9 +60,6 @@ static NSString *const kDefaultIdentifierName = @"identifier";
 
 - (NSArray *)parseObjectsFromResponse:(id)response forModel:(Class)modalClass
 {
-//    if (self.delegate && [self.delegate respondsToSelector:@selector(dataContext:parseObjectsFromResponse:modal:)]) {
-//        return [self.delegate dataContext:self parseObjectsFromResponse:response modal:modalClass];
-//    }
     NSString *collectionName = [[[modalClass description] pluralize] lowercaseString];
     if ([response valueForKey:collectionName]) {
         return [response valueForKey:collectionName];

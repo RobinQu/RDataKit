@@ -23,6 +23,7 @@
 
 // CRUD methods
 + (void)loadAllWithOptions:(NSDictionary *)options callback:(ResponseCallbackBlock)callback;
++ (void)refreshWithOptions:(NSDictionary *)options callback:(ResponseCallbackBlock)callback;
 + (void)loadByIdentifier:(NSString *)identifier withOptions:(NSDictionary *)options callback:(ResourceResponseCallbackBlock)callback;
 + (void)createWithObject:(NSDictionary *)obj callback:(ResourceResponseCallbackBlock)callback;
 + (void)updateByIdentifier:(NSString *)identifier withOptions:(NSDictionary *)options callback:(ResourceResponseCallbackBlock)callback;
