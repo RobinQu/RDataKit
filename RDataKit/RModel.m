@@ -159,19 +159,5 @@ static RDataContext *ctx;
     return identifier;
 }
 
-- (void)setupWithObject:(NSDictionary *)obj
-{
-    RLog(@"should implment in subclass");
-}
-
-- (void)setupWithObject:(NSDictionary *)obj isUpdate:(BOOL)update
-{
-    RLog(@"should implment in subclass");
-}
-
-- (void)setupWithObject:(NSDictionary *)obj isUpdate:(BOOL)update inContext:(NSManagedObjectContext *)context
-{
-    RLog(@"should implment in subclass");
-}
 
 @end

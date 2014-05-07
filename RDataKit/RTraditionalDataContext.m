@@ -25,10 +25,13 @@
         __block NSError *error = nil;
         __block id observer = nil;
         observer = [[NSNotificationCenter defaultCenter] addObserverForName:NSManagedObjectContextDidSaveNotification object:moc queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+            
+            for(NSManagedObject *object in [[note userInfo] objectForKey:NSUpdatedObjectsKey]) {
+                [[moc objectWithID:[object objectID]] willAccessValueForKey:nil];
+            }
             [self.managedObjectContext mergeChangesFromContextDidSaveNotification:note];
             // cancel the observer after a single merge
             [[NSNotificationCenter defaultCenter] removeObserver:observer name:NSManagedObjectContextDidSaveNotification object:moc];
-            
             if (![self.managedObjectContext save:&error]) {
                 RLog(@"main context commit error %@", error);
             }
